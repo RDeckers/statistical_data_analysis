@@ -1,7 +1,6 @@
 import ROOT
 import array
 from math import *
-import numpy as np
 # This file shows you how to work with matrices in ROOT.
 # For this to work, make sure to copy the file matrices.py from
 # /data/stu18q3/SDA/exercises/examples/ to your working
