@@ -36,7 +36,7 @@ R_matrix = matrices.numerical_derivative(R_gen, x)
 Cx = ROOT.TMatrixD(10,10)
 for i in range( len(x) ):
     Cx[i][i] = errx[i]*errx[i]
-CR = R_matrix*Cx*(R_matrix.trans())
+CR = R_matrix*Cx*matrices.matrix_transposed(R_matrix)
 for i in range( len(x) ):
     print "x%d  = %f +/- %f " % (i,x[i],errx[i] )
 
@@ -49,7 +49,7 @@ H =  make_TMatrixD(4,4, [  0.675 , -0.607 , -0.119 ,  0.010,
        -0.282 ,  1.331 ,  0.027 , -0.049,
        -0.133 ,  0.060 ,  0.477 , -0.078,
         0.024 , -0.299 , -0.186 ,  0.185 ])
-Cud = H*CR*(H.trans())
+Cud = H*CR*matrices.matrix_transposed(H)
 ud = H*R
 for i in range( len(ud) ):
     print "ud%d  = %f +/- %f " % (i,ud[i],sqrt(Cud[i][i]) )
