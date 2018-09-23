@@ -56,7 +56,7 @@ Cauchy & $0 \pm 2\times 10 ^2$ \\ \hline
 
 \section{Distributions for $N$ samples}
 Subsequently we plotted the distributions of the mean of $N$ samples from each distribution, for multiple $N$, in figure \ref{fig:dist2}. We see that, as expected, the uniform and exponential distribution converge to a sharply peaked normal distribution as we average more samples.
-The Cauchy distribution however does not show much difference between $N = 10$ or $N = 100$ and if one looks closely does not resemble a normal distribution at all: the tail-ends are flared too much for a normal distribution.
+The Cauchy distribution however does not show much difference between $N = 10$ or $N = 100$ and if one looks closely does not resemble a normal distribution at all: the tail-ends are flared too much for a normal distribution. Out of the three, the uniform distribution tends to a normal distribution the quickest. Probably due to it being already symmetrical.
 
 \begin{figure}[h!]
   \includegraphics[width=\linewidth]{../dist2.png}
@@ -68,6 +68,7 @@ The Cauchy distribution however does not show much difference between $N = 10$ o
 The CLT predicts that as we increase $N$ the mean would remain unchanged, therefore we plotted the mean of the histograms (as computed by ROOT) against $N$ in figure \ref{fig:mean}. All of them seem to be stable, even the Cauchy distributions, this is reasonable because it is a symmetric distribution and any outliers
 due to ill-defined variance will be dealt with by the binning process.
 Furthermore, the CLT predicts that the standard deviation will go as $\sigma_{D_N} = \sigma_D/\sqrt{N}$, therefore the ratio $\sqrt{N}\sigma_{D_N}/\sigma_{D}$ should be equal to one if the CLT holds. We have plotted this ratio in figure \ref{fig:stddev} using the results in table \ref{tbl:mean} for $\sigma_D$\footnote{using the histogram computed value for $\sigma_D$ produces a small and fixed relative offset for uniform and exponential, but still produces wildly wrong results for Cauchy.}.
+\par We see that the CLT does not hold for the Cauchy Distribution if we look at the variance, but it does hold for the uniform and exponential distribution.
 
 \begin{figure}[h!]
   \includegraphics[width=\linewidth]{../mean.png}
