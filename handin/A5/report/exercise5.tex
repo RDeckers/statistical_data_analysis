@@ -1,0 +1,144 @@
+\documentclass[notitlepage, 12pt, a4paper, twoside, titlepage]{article}
+\usepackage{graphicx}
+\usepackage[left=1in, right=1in, top=1in, bottom=1in]{geometry}
+\usepackage{hyperref}
+
+\usepackage{amsmath}
+\usepackage{titling}
+\usepackage{lipsum}
+
+\pretitle{\begin{center}\Huge\bfseries}
+\posttitle{\par\end{center}\vskip 0.5em}
+\preauthor{\begin{center}\Large\ttfamily}
+\postauthor{\end{center}}
+\predate{\par\large\centering}
+\postdate{\par}
+\title{Statistical Data Analysis, Assignment 5}
+\author{Roel Deckers  \\
+	Utrecht University
+	}
+
+\date{\today}
+\begin{document}
+\maketitle
+
+\section{Objective}
+In this report we try to fit a model of the form
+\begin{align}
+	M_{a,b}(m) = \frac{\text{d}N(m)}{\text{d}m} = a \times m + b,
+\end{align}
+with model parameters $a$ and $b$ to a histogram of a mass distribution of events detected in a collider experiment using the maximum likelihood method.
+
+\section{Theory}
+Given histogram with bin centers $x_0,\ldots,x_n$ and corresponding counts $C_1,\ldots,C_n$, the likelihood $L_{M_{a,b}}$ of model $M_{a,b}(m)$ is given by
+\begin{align}
+	L_{M_{a,b}} = \prod_{i=0}^n\text{Poisson}(C_i;\mu = M_{a,b}(x_i)).
+\end{align}
+That is, the product over all bins of the odds of seeing a measured bin count $C_i$, assuming measured bin counts are distributed according to a Poisson distribution with a mean given
+by the model prediction at the bin center.
+ \par Taking into account the definition of the Poisson distribution
+\begin{align}
+	\text{Poisson}(k; \mu) = \frac{\mu^k e^{-\mu}}{k!},
+\end{align}
+ and writing the factorial in terms of the $\Gamma$-function, the log-likelihood can be written as:
+\begin{align}
+		\log L_{M_{a,b}} = \sum_{i=0}^n \left(C_i\log(M_{a,b}(x_i)) - M_{a,b}(x_i) - \log\Gamma(C_i+1)\right).
+\end{align}
+Which will be the quantity we try to maximize in order to determine a maximum likelihood fit. We use $\log\Gamma(k+1)$ because direct computation of $k!$ is computationaly
+infeasible for larger $k$ and there exist\footnote{\url{https://root.cern.ch/root/html524/TMath.html#TMath:LnGamma}} good premade approximations to $\log\Gamma$.
+
+
+\section{Data}
+Our to-be-fitted histogram is shown in figure \ref{fig:data}. We note that the data is restricted to the exclusive range $(1,3)$, therefore we posit that as an additional restriction on our model we have $M_{a,b}(m) > 0\, \forall\,m \in [1,3]$ such that there is a non-zero change of seeing any value in $(1,3)$ in the dataset.
+\par In order to restrict ourselves to this domain we reformulate our model parameters from a slope $a$ and bias $b$ to $y_1$ and $y_3$: the values of $M$ at $m=1$ and $m=3$ respectively. In these coordinates
+ the non-zero restriction simplifies to $y_1 > 0$, $y_3 > 0$. In order to recover $a,b$ from $y_1, y_3$ one can use the formulae
+\begin{align}
+	a = (y_3-y_1)/2,\\
+	b = (3y_1-y_3)/2.
+\end{align}
+
+\begin{figure}[h!]
+  \includegraphics[width=\linewidth]{../original.png}
+  \caption{The to-be-fitted original data.}
+  \label{fig:data}
+\end{figure}
+
+\section{Constant Model}
+\par We start our analysis by fitting the model $M_{$a=0$,b} = M_{y1=y2=b}$ to our data, that is: we fit a horizontal line. For this we apply an iterative Newton solver to optimize the function
+$- \log L_{M_{y1=y2=b}}$. We find that the optimal value $\hat b$ is given by:
+\begin{align}
+	\hat b = 111 \pm 7.
+\end{align}
+\par The result is plotted in figure \ref{fig:b}.
+
+\begin{figure}[h!]
+  \includegraphics[width=\linewidth]{../b.png}
+  \caption{Fit of the constant model $M_{a=0,b} = M_{y1=y2=b}$ to the original data. The red line is the optimal model given by $\hat b = 111 \pm 7$.}
+  \label{fig:b}
+\end{figure}
+
+\section{Linear Model}
+
+\par We now refine our analysis by fitting the complete model $M_{a,b}$ to our data, that is: we fit a linear model. As noted in the Theory section, the model $M_{a,b}$ has
+a less desirable domain compared to $M_{y_1,y_3}$, however we know that the model $M_{a=0,b=111}$ is a valid model and
+we posit that starting from this point, our optimizer will converge to the global minima without trouble.\footnote{In general a Newton Optimizer could end up outside of the domain even when starting near the minimum due to the parameter $\gamma$, however due to a quirk in our implementation this is not an issue: results outside of the domain of the model return 'NaN' which
+will is caught by the optimizer as a sign that $\gamma$ is too big anyways. By working in $a,b$ space we can report the covariances directly without having to convert between coordinates :)}
+ Indeed it does, it quickly converges to
+ \begin{align}
+	 \hat a = -85,\\
+	 \hat b = 280,
+ \end{align}
+with covariances (as determined by the inverse of the numerical Hessian)
+\begin{align}
+	\sigma_{a,a} =  134,\\
+	\sigma_{b,b} = 761,\\
+	\sigma_{a,b} = -311.
+\end{align}
+
+\par These results are shown graphically in figure \ref{fig:2d} and figure \ref{fig:2d2}. In these figures one can see the objective function versus $a$ an $b$ alongside the path taken by the Newton optimizer (black \& red) as well as the 1-$\sigma$ contour of the final result (green). The final fitted model is shown in figure \ref{fig:best}.
+
+\begin{figure}[h!]
+  \includegraphics[width=\linewidth]{../2d.png}
+  \caption{Fit of the linear model $M_{a,b}$ to the original data. The red and black line is the path followed by Newton optimizer towards the optimal values of $\hat a = -85, \hat b = 280$. The green curve is the 1-$\sigma$ contour line of the optimal point. Note that values outside of parameter space of $M_{a,b}$ are shown in white.}
+  \label{fig:2d}
+\end{figure}
+
+\begin{figure}[h!]
+  \includegraphics[width=\linewidth]{../2d2.png}
+  \caption{Fit of the linear model $M_{a,b}$ to the original data. As in figure \ref{fig:2d} only zoomed in closer to the optimal values and with the optimizer started from a different initial value.}
+  \label{fig:2d2}
+\end{figure}
+
+\begin{figure}[h!]
+  \includegraphics[width=\linewidth]{../best_guess.png}
+  \caption{Fit of the linear model $M_{a,b}$ to the original data for optimal values $\hat a = -85, \hat b = 280$.}
+  \label{fig:best}
+\end{figure}
+
+\section{3rd-degree Polynomial model}
+We now introduce another model, that of a third degree Polynomial:
+\begin{align}
+	M_{a,b,c,d}(m) = \frac{\text{d}N(m)}{\text{d}m} = a + m \left(b + m \left(c+md\right)\right).
+\end{align}
+ When we fit this model we find the optimal values
+ \begin{align}
+	 \hat a = 439,\\
+	 \hat b = -312,\\
+	 \hat c = 101,\\
+	 \hat d = -14.
+\end{align}
+ These results are presented graphically in figure \ref{fig:3rd}.  While this model has twice the degrees of freedom as our old model has. A close inspection shows that it hardly deviates from the
+from the previous model. A proper $\Chi^2$-analysis would almost certainly show that this model is less likely than the linear model.
+
+\begin{figure}[h!]
+  \includegraphics[width=\linewidth]{../3rd_degree.png}
+  \caption{Fit of the linear model $M_{a,b,c,d}$ to the original data for optimal values $\hat a = 439,	\hat b = -312,	\hat c = 101,	\hat d = -14$.}
+  \label{fig:3rd}
+\end{figure}
+
+\section{conclusion}
+
+We speculate that the $M_{a,b}$ model with parameters $\hat a = -85, \hat b = 280$ is the best model shown. A lower degree model did not adequately model the distribution while a higher degree model did little to improve the fit. A more rigorous analysis remains to
+truly confirm these speculations.
+
+\end{document}
