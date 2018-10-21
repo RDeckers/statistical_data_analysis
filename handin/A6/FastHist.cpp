@@ -1,6 +1,5 @@
 #include <vector>
 #include <algorithm>
-#include <thread>
 
 //I'm sorry, had to try. Became a little bit of a mess, but it works :)
 //A class for caching the model predictions  so that the expensive TMath calls
@@ -42,7 +41,7 @@ public:
 class FastHist{
   int mEntries = 0;
   //the entries
-  std::vector<double> mData;
+  std::vector<int> mData;
   //cache for model evaluation
   Model mModel;
   //bad hardcoding.
@@ -66,7 +65,7 @@ public:
     mModel.fill_bg(n_bg, mStart, mDelta);
   }
   static FastHist FromROOT(const TH1F* h){
-    auto self = FastHist(h->GetSize()-2, h->GetBinLowEdge(1), h->GetBinLowEdge(h->GetSize()-1));
+    FastHist self = FastHist(h->GetSize()-2, h->GetBinLowEdge(1), h->GetBinLowEdge(h->GetSize()-1));
     for(int i = 0; i < h->GetSize();i++){
       self.SetBinContent(i, h->GetBinContent(i));
     }
@@ -78,7 +77,7 @@ public:
     bin_id = std::clamp(bin_id, 0, (int)(mData.size()-1));
     mData[bin_id] += 1;
   }
-  auto GetBinContent(int i) const{
+  int GetBinContent(int i) const{
     return mData[i];
   }
   void SetBinContent(int i, int x){
@@ -125,7 +124,7 @@ public:
     if(!mModel.contains_mass(m)){
       mModel.fill_model(n_signal, mStart, mDelta, m);
     }
-    auto model = with_signal ? std::function<float(int)>([m, this](int i){return mModel.get_H1(m,i);}) : std::function<float(int)>([m, this](int i){return mModel.get_H0(i);});
+    std::function<float(int)> model = with_signal ? std::function<float(int)>([m, this](int i){return mModel.get_H1(m,i);}) : std::function<float(int)>([m, this](int i){return mModel.get_H0(i);});
     for(int i = 0; i < mModel.size();i++){
       int k = gRandom->Poisson(model(i));
       LL_H1 += log_likelihood_bin(mModel.get_H1(m, i), k);
@@ -134,7 +133,7 @@ public:
     }
     return std::vector({(float)mEntries, LL_H1, LL_H0});
   }
-  std::vector<float> ComputeH1H0(float m = 2.1) const{
+  std::vector<float> ComputeH1H0(float m = 2.1){
     if(!mModel.contains_mass(m)){
       mModel.fill_model(n_signal, mStart, mDelta, m);
     }
@@ -159,7 +158,7 @@ public:
   }
 
   //computes H1 for m0:m1:m_delta and returns the best scoring log-likelihood corresponding m
-  auto ComputeH1VariableMass(float m0, float m1, float m_delta, bool print = false){
+  std::vector<float> ComputeH1VariableMass(float m0, float m1, float m_delta, bool print = false){
     float best = -1e30;
     float best_m = 0;
     for(float m = m0; m <= m1; m+= m_delta){
@@ -192,13 +191,15 @@ public:
   //set everything to 0
   void Clear(){
     mEntries = 0;
-    for(auto& x: mData){
+    for(int& x: mData){
       x = 0;
     }
   }
 
 };
 
+#if __cplusplus >= 201103L
+#include <thread>
 //Fills h with a psuedoexperiment according to the parameters given, and runs multi-threaded.
 // returns a vector of lambdas.
 std::vector<float> do_psuedo_mt(const FastHist *h, int n_entries, bool with_Z, float m, bool dynamic = false){
@@ -226,3 +227,18 @@ std::vector<float> do_psuedo_mt(const FastHist *h, int n_entries, bool with_Z, f
   }
   return ret;
 }
+#else
+#warning "No support for C++11 detected. Update your ROOT or wait a really long time"
+std::vector<float> do_psuedo_mt(const FastHist *h, int n_entries, bool with_Z, float m, bool dynamic = false){
+  std::vector<float> ret(n_entries);
+  for(int i = 0; i < n_entries; i ++){
+    std::vector<float> fill_result = h->FillRandom(with_Z, m);
+    float H1 = fill_result[1];
+    float H0 = fill_result[2];
+    if(dynamic)
+      H1 = h->ComputeH1VariableMass(1.2, 2.8, 0.01)[0];
+    ret[i] = H1-H0;
+  }
+  return ret;
+}
+#endif
