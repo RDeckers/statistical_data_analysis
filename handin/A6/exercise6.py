@@ -128,7 +128,7 @@ generate_psuedos()
 ROOT.gStyle.SetOptStat(0)           # Do not show statistics box
 
 #question b
-(H1, H0) = generate_LLR_distribution(100000,hist_range = [-10,14])
+(H1, H0) = generate_LLR_distribution(1000,hist_range = [-10,14])
 H1_mean = H1.GetMean()
 print H1_mean, " = H1 mean" # 2.8868
 print H0.GetMean(), " = H0 mean" # -2.3788
@@ -142,7 +142,7 @@ print 1.0 - cdf.Interpolate(H1_mean), " = predicted p-value" #0.0073
 print 1.0 - cdf.Interpolate(H1-H0), " = measured p-value" # 0.00264800
 
 #part two
-(H1, H0) = generate_LLR_distribution(25000, 2.1, True)
+(H1, H0) = generate_LLR_distribution(1000, 2.1, True)
 
 H1_mean = H1.GetMean()
 print H1_mean, " = H1 mean" # 2.8868
@@ -167,7 +167,7 @@ canv.SaveAs("results/cdfs_compared.png")
 canv.Clear()
 print 1.0 - cdf_dy.Interpolate(H1_mean), " = predicted dynamic p-value" #0.0073
 H0 = data.ComputeH0()
-(H1, m_fit) = data.ComputeH1VariableMass(1.2, 2.8, 0.01)
+(H1, m_fit) = data.ComputeH1VariableMass(1.2, 2.8, 0.1)
 print 1.0 - cdf_dy.Interpolate(H1-H0), " = measured dynamic p-value" # 0.00264800
 print m_fit, " = m fit"
 
@@ -182,10 +182,10 @@ canv.Update()
 canv.SaveAs("results/fit.png")
 canv.Clear()
 
-nM = 40
+nM = 10
 M = array.array('d',[1.2 + 1.6*m_i/nM for m_i in range(nM + 1)])
 P = array.array('d',[0 for _ in M])
-n_entries = 7500
+n_entries = 500
 H1_2d = ROOT.TH2F('2dH1', 'LLR distribution of H1 vs particle mass M_{z};\lambda;M_{z};number of entries', 2000, -2, 16, nM, 1.2, 2.8)
 for i,m in enumerate(M):
     H1 = generate_LLR_H1(n_entries, m, True, 2000, [-2,16])
